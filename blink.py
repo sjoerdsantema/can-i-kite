@@ -3,6 +3,8 @@ from time import sleep # Import the sleep function from the time module
 import urllib.request, urllib.parse, urllib.error
 import json
 import ssl
+import logging
+logging.basicConfig(filename='blink.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 GPIO.setwarnings(False) # Ignore warning for now
 GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
@@ -27,7 +29,7 @@ url = service_url + urllib.parse.urlencode(parms)
 
 # Blink speed function
 def blink(windspeed):
-    if 0.7-(float(windspeed)/100) < 0.0001: 
+    if 0.7-(float(windspeed)/100) < 0.05: 
         blink_time = 0.05
         print(f"Lots of wind! Blink period: set to minimum") # To make sure blink_time never becomes a negative
         return blink_time
@@ -50,7 +52,7 @@ while True:
         gooddirection = None 
         minwind = 17
         mintemp = 10
-        good_wind_dir = ['Z', 'W', 'ZW', 'NW', 'N', 'NNW', 'ZZW']
+        good_wind_dir = ['Z', 'W', 'ZW', 'NW', 'N', 'NNW', 'ZZW', 'West', 'Noord', 'West', 'Zuid']
 
         # Check wind direction
         if windr in good_wind_dir:
@@ -73,6 +75,7 @@ while True:
                 sleep(blink_time)
                 GPIO.output(8, GPIO.LOW) # And again
                 sleep(blink_time) 
+            logging.info('GREEN LIGHT, %s knots of wind blowing from the %s at %s celcius', windk, windr, temp)
             continue     
         else:
             print("No kiting possible right now")
@@ -97,6 +100,7 @@ while True:
             print("Light is RED")
             GPIO.output(8, GPIO.LOW) # Turn the green LED off
             GPIO.output(10, GPIO.HIGH) # Turn the red LED on
+            logging.info('RED LIGHT, %s knots of wind blowing from the %s at %s celcius', windk, windr, temp)
             sleep(288) # To make sure no more than 300 calls are sent per day
             continue
     except: # Error message if something went wrong
@@ -108,6 +112,7 @@ while True:
             GPIO.output(8, GPIO.LOW) # Turn the green LED off
             GPIO.output(10, GPIO.LOW) # Turn the red LED off
             sleep(1) 
+        logging.warning('Something went wrong!')
         continue     
 
 
